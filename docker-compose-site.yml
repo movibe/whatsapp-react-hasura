@@ -71,6 +71,23 @@ services:
       - postgres
     networks: 
       - network_zap
+  site:
+    build:
+      context: ./site
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_SERVER_URL=http://localhost:1337/v1/graphql
+      - REACT_APP_AUTH_URL=http://localhost:8010
+      - REACT_APP_ENV="dev"
+    ports:
+      - "3000:3000"
+      - "35729:35729"
+    depends_on:
+      - server
+    volumes:
+      - ./site:/app
+    networks: 
+      - network_zap
 
 networks:
   network_zap:

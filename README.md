@@ -23,7 +23,7 @@ The react client is a forked version of [urigo/whatsapp-client-react](https://gi
 - Apply the migrations:
   ```bash
   cd hasura 
-  hasura migrate apply --endpoint "http://localhost:8080"
+  hasura migrate apply --endpoint "http://localhost:1337"
   ```
 
 #### Run the auth server

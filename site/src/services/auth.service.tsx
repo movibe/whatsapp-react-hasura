@@ -18,7 +18,14 @@ export const withAuth = (Component: React.ComponentType) => {
     if (!getAuthHeader()) return <Redirect to="/sign-in" />
 
     // Validating against server
-    const fetchUser = useQuery<Me.Query, Me.Variables>(queries.me, { suspend: true, context: { headers: {'x-hasura-role': 'mine'}} })
+    const fetchUser = useQuery<Me.Query, Me.Variables>(queries.me, {
+      suspend: true, context: {
+        headers: {
+          // 'x-hasura-role': 'mine',
+          // 'x-hasura-user-id': getAuthHeader()
+        }
+      }
+    })
     const myResult = fetchUser.data.users ? fetchUser.data.users[0] : {};
 
     useSubscriptions(myResult)
@@ -32,7 +39,7 @@ export const withAuth = (Component: React.ComponentType) => {
 }
 
 export const storeAuthHeader = (auth: string) => {
-  localStorage.setItem('Authorization', 'Bearer '+auth)
+  localStorage.setItem('Authorization', 'Bearer ' + auth)
 }
 
 export const getAuthHeader = (): string | null => {
@@ -48,16 +55,16 @@ export const signIn = ({ username, password }) => {
       'Content-Type': 'application/json'
     },
   })
-  .then(res => {
-    if (res.status < 400) {
-      return res.json().then((data) => {
-        const token = data.token;
-        storeAuthHeader(token);
-      });
-    } else {
-      return Promise.reject(res.statusText)
-    }
-  })
+    .then(res => {
+      if (res.status < 400) {
+        return res.json().then((data) => {
+          const token = data.token;
+          storeAuthHeader(token);
+        });
+      } else {
+        return Promise.reject(res.statusText)
+      }
+    })
 }
 
 export const signUp = ({ username, password, name }) => {
