@@ -113,7 +113,7 @@ export default ({ history }: ChatsListProps) => {
                 }
               />
               <div className="ChatsList-info">
-                <div className="ChatsList-name">{chat.owner_id ? chat.name : chat.users[0].user.username}</div>
+                <div className="ChatsList-name">{chat.owner_id ? chat.name : chat.users[0].user.name}</div>
                 {chat.messages && chat.messages[chat.messages.length - 1] && (
                   <React.Fragment>
                     <div className="ChatsList-last-message">{chat.messages[chat.messages.length - 1].content}</div>

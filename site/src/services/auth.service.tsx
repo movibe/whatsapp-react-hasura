@@ -8,24 +8,27 @@ import { Me } from '../graphql/types'
 import { useSubscriptions } from './cache.service'
 
 const MyContext = React.createContext(null)
-
-export const useMe = () => {
-  return useContext(MyContext)
-}
+export const useMe = () => useContext(MyContext)
 
 export const withAuth = (Component: React.ComponentType) => {
+  const { user, token } = getAuthHeader()
+
   return props => {
     if (!getAuthHeader()) return <Redirect to="/sign-in" />
 
+
     // Validating against server
     const fetchUser = useQuery<Me.Query, Me.Variables>(queries.me, {
-      suspend: true, context: {
+      suspend: true,
+      context: {
         headers: {
-          // 'x-hasura-role': 'mine',
-          // 'x-hasura-user-id': getAuthHeader()
+          Authorization: token,
+          'x-hasura-user-id': user,
+          'x-hasura-role': 'mine'
         }
       }
     })
+
     const myResult = fetchUser.data.users ? fetchUser.data.users[0] : {};
 
     useSubscriptions(myResult)
@@ -38,12 +41,16 @@ export const withAuth = (Component: React.ComponentType) => {
   }
 }
 
-export const storeAuthHeader = (auth: string) => {
+export const storeAuthHeader = (auth: string, user: string) => {
   localStorage.setItem('Authorization', 'Bearer ' + auth)
+  localStorage.setItem('user', user)
 }
 
-export const getAuthHeader = (): string | null => {
-  return localStorage.getItem('Authorization') || null
+export const getAuthHeader = (): { token: string, user: string } | null => {
+  return {
+    token: localStorage.getItem('Authorization'),
+    user: localStorage.getItem('user')
+  } || null
 }
 
 export const signIn = ({ username, password }) => {
@@ -57,9 +64,8 @@ export const signIn = ({ username, password }) => {
   })
     .then(res => {
       if (res.status < 400) {
-        return res.json().then((data) => {
-          const token = data.token;
-          storeAuthHeader(token);
+        return res.json().then(({ token, user }) => {
+          storeAuthHeader(token, user);
         });
       } else {
         return Promise.reject(res.statusText)
@@ -80,7 +86,6 @@ export const signUp = ({ username, password, name }) => {
 
 export const signOut = () => {
   localStorage.removeItem('Authorization')
-  // window.location.href = '/sign-in'
 
   return store.clearStore()
 }

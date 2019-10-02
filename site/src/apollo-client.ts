@@ -20,22 +20,16 @@ const wsLink = new WebSocketLink({
   options: {
     lazy: true,
     reconnect: true,
-    connectionParams: () => {
-      return { headers: {'Authorization': getAuthHeader()} };
-    },
+    connectionParams: () => ({ headers: { 'Authorization': getAuthHeader().token } }),
   },
 })
 
-const authLink = setContext((_, { headers }) => {
-  const auth = getAuthHeader()
-
-  return {
-    headers: {
-      ...headers,
-      Authorization: auth,
-    },
-  }
-})
+const authLink = setContext((_, { headers }) => ({
+  headers: {
+    ...headers,
+    Authorization: getAuthHeader(),
+  },
+}))
 
 const terminatingLink = split(
   ({ query }) => {

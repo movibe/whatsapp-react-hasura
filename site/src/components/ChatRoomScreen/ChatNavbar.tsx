@@ -13,7 +13,6 @@ import { useState } from 'react'
 import { useQuery, useMutation } from 'react-apollo-hooks'
 import styled from 'styled-components'
 import * as fragments from '../../graphql/fragments'
-import * as queries from '../../graphql/queries'
 import { useMe } from '../../services/auth.service';
 import { ChatList, DeleteChat, ChatsListCacheQuery } from '../../graphql/types'
 
@@ -111,7 +110,7 @@ interface ChatNavbarProps {
 
 export default ({ chatId, history }: ChatNavbarProps) => {
   const me = useMe();
-  const parsedChatId = parseInt(chatId,10)
+  const parsedChatId = parseInt(chatId, 10)
   const {
     data: { chat_users },
   } = useQuery<ChatList.Query, ChatList.Variables>(query, {
@@ -127,9 +126,9 @@ export default ({ chatId, history }: ChatNavbarProps) => {
         try {
           chats = client.readQuery<ChatsListCacheQuery.Query, ChatsListCacheQuery.Variables>({
             query: queryCache,
-            variables: {userId: me.id}
+            variables: { userId: me.id }
           }).chat
-        } catch(e) {
+        } catch (e) {
           console.error(e)
         }
         if (chats) {
@@ -138,10 +137,10 @@ export default ({ chatId, history }: ChatNavbarProps) => {
           try {
             client.writeQuery<ChatsListCacheQuery.Query, ChatsListCacheQuery.Variables>({
               query: queryCache,
-              variables: {userId: me.id},
+              variables: { userId: me.id },
               data: { chat: chats },
             })
-          } catch(e) {
+          } catch (e) {
             console.error(e)
           }
         }
@@ -164,7 +163,7 @@ export default ({ chatId, history }: ChatNavbarProps) => {
     removeChat().then(navToChats)
   }
   let picture = chat_users[0].chat.owner_id ? chat_users[0].chat.picture : chat_users[0].user.picture;
-  if(!picture) {
+  if (!picture) {
     picture = chat_users[0].chat.owner_id ? '/assets/default-group-pic.jpg' : '/assets/default-profile-pic.jpg';
   }
   return (
@@ -176,7 +175,7 @@ export default ({ chatId, history }: ChatNavbarProps) => {
         className="ChatNavbar-picture"
         src={picture}
       />
-      <div className="ChatNavbar-title">{chat_users[0].chat.owner_id ? chat_users[0].chat.name : chat_users[0].user.username}</div>
+      <div className="ChatNavbar-title">{chat_users[0].chat.owner_id ? chat_users[0].chat.name : chat_users[0].user.name}</div>
       <div className="ChatNavbar-rest">
         <Button className="ChatNavbar-options-btn" onClick={setPopped.bind(null, true)}>
           <MoreIcon />

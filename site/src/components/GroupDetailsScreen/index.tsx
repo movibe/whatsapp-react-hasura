@@ -128,8 +128,8 @@ export default ({ location, match, history }: RouteComponentProps) => {
       chatNameState = useState(chat[0].name)
       chatPictureState = useState(chat[0].picture)
     } else {
-      chatNameState = [chat[0].name, () => {}]
-      chatPictureState = [chat[0].picture, () => {}]
+      chatNameState = [chat[0].name, () => { }]
+      chatPictureState = [chat[0].picture, () => { }]
     }
 
     const [chatName] = chatNameState
@@ -165,7 +165,7 @@ export default ({ location, match, history }: RouteComponentProps) => {
     )
   } else {
     ownedByMe = true
-    updateChat = () => {}
+    updateChat = () => { }
     chatNameState = useState('')
     chatPictureState = useState('')
     users = location.state.users
@@ -199,7 +199,7 @@ export default ({ location, match, history }: RouteComponentProps) => {
 
     if (!file) return
 
-    const { secure_url } = await uploadProfilePicture(file)
+    const secure_url = await uploadProfilePicture(file)
 
     setChatPicture(secure_url)
   }

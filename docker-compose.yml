@@ -1,4 +1,4 @@
-version: "3"
+version: "3.7"
 services:
   postgres:
     image: postgres
@@ -6,8 +6,8 @@ services:
       - POSTGRES_PASSWORD=postgres_password
     ports:
       - "15432:5432"
-    # volumes:
-    #   - ./database:/var/lib/postgresql/data
+    volumes:
+      - db_data:/var/lib/postgresql/data
     networks: 
       - network_zap
   pgadmin:
@@ -30,7 +30,9 @@ services:
     environment:
       - HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:postgres_password@postgres:5432/postgres # postgresql defaults
       - HASURA_GRAPHQL_ENABLE_CONSOLE=true
-      # - HASURA_GRAPHQL_ADMIN_SECRET=jkasvbdhbjaasdkahbsd
+      # - HASURA_GRAPHQL_ADMIN_SECRET=admin123
+    volumes:
+      - ./hasura/migrations:/hasura-migrations
     depends_on:
       - postgres
       - pgadmin
@@ -39,39 +41,90 @@ services:
   mail:
     image: mailhog/mailhog
     ports:
-      - "8025:8025"
-      - "1025:1025"
+      - 8025:8025
+      - 1025:1025
     networks: 
       - network_zap
   s3:
     image: minio/minio
     command: server http://minio{1...4}/data{1...2}
     ports:
-      - "9000:9000"
+      - 9000:9000
     volumes:
       - ./storage:/data
     environment:
-      - MINIO_ACCESS_KEY=minio_access_key
-      - MINIO_SECRET_KEY=minio_secret_key
+      - MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
+      - MINIO_SECRET_KEY=wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY
     command: server /data
     networks: 
       - network_zap
-  server:
+  server-auth:
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: ./server-auth
+    restart: always
     environment:
+      - MAILHOG_HOST=mail
       - ENCRYPTION_KEY=asdfsdaf
       - DATABASE_URL=postgres://postgres:postgres_password@postgres:5432/postgres # postgresql defaults
-      - CLOUDINARY_URL=dfadfasdf
       - PORT=8010
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
     ports:
       - "8010:8010"
     depends_on:
       - postgres
+    volumes:
+    - ./server:/app
+    networks: 
+      - network_zap
+  server-upload:
+    build:
+      context: ./server-upload
+    command: "npm start"
+    environment:
+      - S3_HOST=s3:9000
+      - S3_KEY=AKIAIOSFODNN7EXAMPLE
+      - S3_SECRET=wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY
+      - S3_REGION=us-east-1
+      - S3_BUCKET=storage
+      - S3_PORT=
+      - PORT=8011
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "8011:8011"
+    depends_on:
+      - s3
+    volumes:
+    - ./server-upload:/app
+    - /app/node_modules
+    networks: 
+      - network_zap
+  site:
+    build:
+      context: ./site
+    command: "npm start"
+    environment:
+      - REACT_APP_SERVER_URL=http://localhost:1337/v1/graphql
+      - REACT_APP_AUTH_URL=http://localhost:8010
+      - REACT_APP_UPLOAD=http://localhost:8011
+      - REACT_APP_ENV='dev'
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    depends_on:
+      - s3
+    volumes:
+    - ./site:/app
+    - /app/node_modules
     networks: 
       - network_zap
 
 networks:
   network_zap:
     driver: bridge
+
+volumes:
+  db_data:

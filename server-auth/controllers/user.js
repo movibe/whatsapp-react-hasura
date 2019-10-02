@@ -14,11 +14,11 @@ exports.postLogin = async (req, res, next) => {
   const errors = req.validationErrors();
 
   if (errors) {
-    return res.status(400).json({'errors': errors});
+    return res.status(400).json({ 'errors': errors });
   }
 
   passport.authenticate('local', (err, user) => {
-    if (err) { return handleResponse(res, 400, {'error': err})}
+    if (err) { return handleResponse(res, 400, { 'error': err }) }
     if (user) {
 
       const tokenContents = {
@@ -26,14 +26,15 @@ exports.postLogin = async (req, res, next) => {
         name: user.username,
         iat: Date.now() / 1000,
         "https://hasura.io/jwt/claims": {
-          "x-hasura-allowed-roles": ["mine","user"],
+          "x-hasura-allowed-roles": ["mine", "user"],
           "x-hasura-user-id": '' + user.id,
           "x-hasura-default-role": "user",
-          "x-hasura-role": "user"
+          "x-hasura-role": "mine"
         }
       }
 
       handleResponse(res, 200, {
+        user: user.id,
         token: jwt.sign(tokenContents, process.env.ENCRYPTION_KEY)
       });
     }
@@ -54,23 +55,23 @@ exports.postSignup = async (req, res, next) => {
   const errors = req.validationErrors();
 
   if (errors) {
-    return res.status(400).json({'errors': errors});
+    return res.status(400).json({ 'errors': errors });
   }
 
   try {
     await User.query()
-    .allowInsert('[name, username, password]')
-    .insert({
-      name: req.body.name,
-      username: req.body.username,
-      password: req.body.password
-    });
+      .allowInsert('[name, username, password]')
+      .insert({
+        name: req.body.name,
+        username: req.body.username,
+        password: req.body.password
+      });
   } catch (err) {
     errorHandler(err, res);
     return;
   }
   passport.authenticate('local', (err, user, info) => {
-    if (err) {  return handleResponse(res, 400, {'error': err})}
+    if (err) { return handleResponse(res, 400, { 'error': err }) }
     if (user) {
       handleResponse(res, 200, user.getUser());
     }

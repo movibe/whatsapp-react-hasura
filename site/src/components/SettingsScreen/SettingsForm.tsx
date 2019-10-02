@@ -11,8 +11,6 @@ import * as fragments from '../../graphql/fragments'
 import { SettingsFormMutation, User } from '../../graphql/types'
 import { useMe } from '../../services/auth.service'
 import { pickPicture, uploadProfilePicture } from '../../services/picture.service'
-import Navbar from '../Navbar'
-import SettingsNavbar from './SettingsNavbar'
 
 const Style = styled.div`
   .SettingsForm-picture {
@@ -102,12 +100,9 @@ export default ({ history }: RouteComponentProps) => {
 
   const updatePicture = async () => {
     const file = await pickPicture()
-
     if (!file) return
-
-    const { secure_url } = await uploadProfilePicture(file)
-
-    setMyPicture(secure_url)
+    const picture = await uploadProfilePicture(file)
+    setMyPicture(picture)
   }
 
   return (

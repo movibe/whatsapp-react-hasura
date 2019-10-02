@@ -14,18 +14,19 @@ export const pickPicture = () => {
   })
 }
 
-export const uploadProfilePicture = file => {
+export const uploadProfilePicture = async (file) => {
   const formData = new FormData()
   formData.append('file', file)
-  formData.append('upload_preset', 'profile-pic')
 
-  return fetch(`${process.env.REACT_APP_AUTH_URL}/upload-profile-pic`, {
+  let req: any = await fetch(`${process.env.REACT_APP_UPLOAD}/upload`, {
     method: 'POST',
     body: formData,
     headers: {
-      Authorization: getAuthHeader(),
+      Authorization: getAuthHeader().token,
     }
-  }).then(res => {
-    return res.json()
   })
+  req = await req.json()
+
+  return `${process.env.REACT_APP_UPLOAD}/download/${req.originalname}`
+
 }
